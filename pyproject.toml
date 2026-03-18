@@ -1,0 +1,9 @@
+[project]
+name = "hsu-queryai"
+version = "0.1.0"
+description = "Text-to-SQL pipeline for HSU CRM using Uber QueryAI architecture"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

@@ -1,0 +1,87 @@
+{
+  "tables": {
+    "zalo_conversations": {
+      "description": "Cuộc trò chuyện Zalo 1-1 giữa CVTS và lead — lưu trữ toàn bộ lịch sử tin nhắn. Mỗi conversation có 1 CVTS owner (user_id) và có thể link tới 1 lead (lead_id, nullable).",
+      "columns": {
+        "id": "ID duy nhất trong CRM",
+        "conversation_id": "thread_id từ Zalo (unique) — dùng để sync",
+        "user_id": "FK → users.id — CVTS sở hữu cuộc trò chuyện (required)",
+        "lead_id": "FK → leads.id — Lead liên quan (nullable, sẽ fill sau khi mapping)",
+        "lead_zalo_id": "Zalo ID của lead",
+        "lead_phone": "Số điện thoại lead (nếu có)",
+        "conversation_title": "Tiêu đề cuộc trò chuyện",
+        "conversation_thumbnail": "URL ảnh đại diện",
+        "last_message": "Preview tin nhắn cuối cùng",
+        "last_message_at": "Thời gian tin nhắn cuối — DÙNG ĐỂ FILTER THEO THỜI GIAN",
+        "messages": "JSONB array — toàn bộ tin nhắn [{content, senderName, sender('lead'/'cvts'), timestamp}]",
+        "created_at": "Ngày tạo conversation",
+        "updated_at": "Ngày cập nhật cuối"
+      },
+      "relationships": [
+        "Many-to-one: nhiều zalo_conversations → 1 user (user_id = CVTS owner)",
+        "Many-to-one: nhiều zalo_conversations → 1 lead (lead_id, nullable)",
+        "One-to-one: 1 zalo_conversation → 1 zalo_ai_analysis (qua zalo_ai_analysis.zalo_conversation_id)"
+      ]
+    },
+    "zalo_ai_analysis": {
+      "description": "Kết quả phân tích AI của cuộc trò chuyện Zalo — bao gồm sentiment, chủ đề được trích xuất, đánh giá chất lượng tư vấn (quality score 0-100, grade A/B/C/D/F), và gợi ý hành động.",
+      "columns": {
+        "id": "ID duy nhất",
+        "zalo_conversation_id": "FK → zalo_conversations.id (unique — 1 conversation → 1 analysis)",
+        "sentiment": "Cảm xúc cuộc trò chuyện: 'positive', 'neutral', 'negative'",
+        "summary": "Tóm tắt cuộc trò chuyện do AI tạo (text)",
+        "topics": "text[] — Array các chủ đề được AI trích xuất, VD: ['học bổng', 'học phí', 'ngành CNTT']. Dùng UNNEST(topics) để phân tách.",
+        "suggested_actions": "text[] — Array các hành động đề xuất (ví dụ: 'Gọi lại tư vấn sáng mai')",
+        "analysis_data": "JSONB — Full response từ AI API",
+        "quality_score": "INTEGER 0-100 — Điểm chất lượng tư vấn tổng thể",
+        "quality_grade": "Xếp loại: 'A' (Xuất sắc), 'B' (Tốt), 'C' (Trung bình), 'D' (Yếu), 'F' (Kém)",
+        "quality_breakdown": "JSONB — Chi tiết metrics: response time, engagement, professionalism",
+        "quality_flags": "text[] — Cờ cảnh báo: 'SPAM_DETECTED', 'LOW_ENGAGEMENT', etc.",
+        "created_at": "Ngày phân tích",
+        "updated_at": "Ngày cập nhật"
+      },
+      "relationships": [
+        "One-to-one: 1 zalo_ai_analysis → 1 zalo_conversation (unique constraint)"
+      ],
+      "business_rules": [
+        "JOIN qua zalo_conversation_id để lấy thông tin CVTS và lead",
+        "topics là TEXT[] — dùng UNNEST(topics) để tách mảng",
+        "quality_score/quality_grade dùng để đánh giá chất lượng chăm sóc của CVTS"
+      ]
+    },
+    "zalo_ai_analysis_recap": {
+      "description": "Tổng hợp phân tích chủ đề từ nhiều cuộc trò chuyện Zalo — snapshot định kỳ giúp phát hiện xu hướng và insights marketing.",
+      "columns": {
+        "id": "ID duy nhất",
+        "total_records": "Tổng số records zalo_ai_analysis được phân tích",
+        "total_topics": "Tổng số topics (có duplicates)",
+        "unique_topics": "Số topics unique",
+        "analysis": "JSONB — {summary: {totalTopics, totalOccurrences, groupCount}, groups: [{name, description, topics[], count, percentage, occurrences}]}",
+        "model": "Model AI sử dụng",
+        "tokens_used": "Số tokens API đã tiêu thụ",
+        "created_at": "Ngày tạo snapshot"
+      },
+      "relationships": [
+        "Aggregate: tổng hợp từ nhiều zalo_ai_analysis records"
+      ]
+    },
+    "users": {
+      "description": "Người dùng hệ thống (tham chiếu) — CVTS (role='cvts') là nhân viên tuyển sinh chăm sóc lead qua chat Zalo.",
+      "columns": {
+        "id": "ID duy nhất",
+        "full_name": "Họ tên",
+        "role": "Vai trò — 'cvts' là nhân viên tuyển sinh",
+        "status": "'active', 'inactive', 'deleted'"
+      }
+    },
+    "leads": {
+      "description": "Học sinh tiềm năng (tham chiếu) — có thể join qua zalo_conversations.lead_id.",
+      "columns": {
+        "id": "ID duy nhất",
+        "full_name": "Họ tên",
+        "phone": "Số điện thoại",
+        "assigned_to": "FK → users.id — CVTS phụ trách"
+      }
+    }
+  }
+}

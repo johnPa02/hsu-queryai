@@ -1,0 +1,49 @@
+{
+  "tables": {
+    "voip_call_records": {
+      "description": "Lịch sử cuộc gọi từ hệ thống tổng đài VoIP — bao gồm thông tin cuộc gọi, hướng (inbound/outbound), trạng thái (answered/missed), thời lượng, và kết quả phân tích AI (sentiment, keywords, topics, quality_score trong JSONB).",
+      "columns": {
+        "id": "ID duy nhất trong CRM",
+        "extension": "Số máy lẻ (extension) thực hiện/nhận cuộc gọi — SOFT MATCH với users (không có FK)",
+        "dst": "Số điện thoại đích (đã gọi hoặc gọi đến) — SOFT MATCH với leads.phone (không có FK)",
+        "duration": "Thời lượng cuộc gọi tính bằng GIÂY (integer)",
+        "uniqueid": "Unique call ID từ VoIP system (unique)",
+        "record_url": "URL file ghi âm cuộc gọi trên cloud",
+        "createtime": "Thời gian cuộc gọi — DÙNG ĐỂ FILTER THEO THỜI GIAN (không phải created_at)",
+        "analysis": "JSONB — Kết quả phân tích AI: {sentiment: 'positive'|'neutral'|'negative', keywords: [], topics: [], duration_category: 'short'|'medium'|'long', quality_score: 0-100}. Truy cập bằng analysis->>'quality_score' (text, cần cast ::numeric), analysis->'topics' (JSONB array, dùng jsonb_array_elements_text())",
+        "direction": "Hướng cuộc gọi: 'inbound' (gọi đến từ lead), 'outbound' (CVTS gọi ra), 'internal' (nội bộ)",
+        "call_status": "Trạng thái: 'answered' (đã trả lời), 'missed' (nhỡ), 'voicemail' (để lại tin nhắn thoại)",
+        "imported_at": "Thời gian import vào CRM",
+        "created_at": "Ngày tạo record trong CRM"
+      },
+      "relationships": [
+        "SOFT relationship: Match với leads qua dst = leads.phone (KHÔNG CÓ FK)",
+        "SOFT relationship: Match với users qua extension mapping (KHÔNG CÓ FK)"
+      ],
+      "business_rules": [
+        "Dùng createtime (KHÔNG PHẢI created_at) cho filter theo thời gian",
+        "analysis là JSONB — truy cập bằng -> (object) và ->> (text)",
+        "Cần cast khi dùng quality_score: (analysis->>'quality_score')::numeric",
+        "topics trong analysis là JSONB array — dùng jsonb_array_elements_text(analysis->'topics')"
+      ]
+    },
+    "users": {
+      "description": "Người dùng hệ thống (tham chiếu) — match với voip_call_records qua extension mapping.",
+      "columns": {
+        "id": "ID duy nhất",
+        "full_name": "Họ tên",
+        "role": "Vai trò",
+        "phone": "Số điện thoại — có thể match với extension",
+        "status": "'active', 'inactive', 'deleted'"
+      }
+    },
+    "leads": {
+      "description": "Học sinh tiềm năng (tham chiếu) — match với voip_call_records qua phone = dst.",
+      "columns": {
+        "id": "ID duy nhất",
+        "full_name": "Họ tên",
+        "phone": "Số điện thoại — match với voip_call_records.dst"
+      }
+    }
+  }
+}

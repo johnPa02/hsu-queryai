@@ -1,0 +1,54 @@
+{
+  "CVTS": {
+    "meaning": "Cán Bộ Tuyển Sinh",
+    "db_field": "users.role = 'cvts'"
+  },
+  "CTV": {
+    "meaning": "Cộng Tác Viên",
+    "db_field": "users.role = 'ctv'"
+  },
+  "ĐKOL": {
+    "meaning": "Đăng Ký Online (đã đăng ký xét tuyển online)",
+    "db_field": "leads.stage = 'online_admission' OR leads.is_online_applied = true"
+  },
+  "ĐKNV": {
+    "meaning": "Đăng Ký Nguyện Vọng",
+    "db_field": "leads.care_status IN ('planning_to_register', 'confirmed_registered')"
+  },
+  "lead A": {
+    "meaning": "Lead có điểm tiềm năng cao nhất",
+    "db_field": "leads.smart_score = 'A'"
+  },
+  "không đủ tài chính": {
+    "meaning": "Lead có trạng thái chăm sóc 'Không đủ tài chính'",
+    "db_field": "leads.care_status = 'insufficient_funds'"
+  },
+  "đã nhập học": {
+    "meaning": "Lead đã hoàn tất thủ tục nhập học",
+    "db_field": "leads.is_enrolled = true"
+  },
+  "đã trúng tuyển": {
+    "meaning": "Lead đã được nhận vào trường",
+    "db_field": "leads.is_admitted = true"
+  },
+  "đã cọc học bổng": {
+    "meaning": "Lead đã đặt cọc tiền xét học bổng",
+    "db_field": "leads.is_scholarship_deposited = true"
+  },
+  "đã đăng ký xét học bổng": {
+    "meaning": "Lead đã nộp hồ sơ xét học bổng",
+    "db_field": "leads.is_scholarship_applied = true"
+  },
+  "đã hoàn tất học phí": {
+    "meaning": "Lead đã đóng học phí đầy đủ",
+    "db_field": "leads.is_tuition_paid = true"
+  },
+  "phụ huynh hỗ trợ cao": {
+    "meaning": "Lead có phụ huynh hỗ trợ ở mức cao",
+    "db_field": "leads.parent_support = 'high'"
+  },
+  "chắc chắn chọn HSU": {
+    "meaning": "Lead trong care_status chắc chắn sẽ chọn HSU",
+    "db_field": "leads.care_status = 'definitely_choose_hsu'"
+  }
+}

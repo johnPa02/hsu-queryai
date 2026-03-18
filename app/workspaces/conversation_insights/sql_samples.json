@@ -1,0 +1,37 @@
+[
+  {
+    "id": "q07",
+    "intent": "chat_topic_analysis",
+    "question": "Các chủ đề mà lead hay quan tâm khi chat?",
+    "sql": "SELECT g->>'name' as group_topic_name, (g->>'percentage')::numeric as percentage, (g->>'count')::int as topic_count, (g->>'occurrences')::int as occurrences, g->>'description' as description, g->'topics' as topics FROM zalo_ai_analysis_recap r, jsonb_array_elements(r.analysis->'groups') as g ORDER BY r.created_at DESC, (g->>'percentage')::numeric DESC;",
+    "explanation": "Các chủ đề mà lead hay quan tâm khi chat?"
+  },
+  {
+    "id": "q10",
+    "intent": "chat_topic_analysis",
+    "question": "Nội dung của các cuộc hội thoại trong 1 tuần qua, các bạn quan tâm điều gì?",
+    "sql": "WITH zalo_topics AS ( SELECT za.zalo_conversation_id, za.sentiment, za.quality_grade, za.quality_score, unnest(za.topics) as topic FROM zalo_ai_analysis za WHERE za.topics IS NOT NULL AND array_length(za.topics, 1) > 0 ) SELECT topic as \"Chủ đề\", COUNT(*) as \"Số lần xuất hiện\", ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as \"Tỷ lệ (%)\", COUNT(DISTINCT zalo_conversation_id) as \"Số cuộc hội thoại\" FROM zalo_topics GROUP BY topic ORDER BY COUNT(*) DESC LIMIT 20;",
+    "explanation": "Nội dung của các cuộc hội thoại trong 1 tuần qua, các bạn quan tâm điều gì?"
+  },
+  {
+    "id": "q11",
+    "intent": "chat_topic_analysis",
+    "question": "Tính từ 1/1 đến giờ, cho thống kê nội dung các cuộc hội thoại",
+    "sql": "WITH zalo_topics AS ( SELECT u.full_name as cvts_name, u.area, unnest(za.topics) as topic FROM zalo_ai_analysis za INNER JOIN zalo_conversations zc ON za.zalo_conversation_id = zc.id LEFT JOIN users u ON zc.user_id = u.id WHERE zc.created_at >= '2025-01-01' AND za.topics IS NOT NULL AND array_length(za.topics, 1) > 0 ), topic_stats AS ( SELECT cvts_name, area, topic, COUNT(*) as count, ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(PARTITION BY cvts_name), 2) as percentage, ROW_NUMBER() OVER(PARTITION BY cvts_name ORDER BY COUNT(*) DESC) as rank FROM zalo_topics GROUP BY cvts_name, area, topic ) SELECT cvts_name as \"CVTS\", area as \"Khu vực\", topic as \"Chủ đề\", count as \"Số lần\" FROM topic_stats WHERE rank <= 5 ORDER BY cvts_name, rank;",
+    "explanation": "Tính từ 1/1 đến giờ, cho thống kê nội dung các cuộc hội thoại"
+  },
+  {
+    "id": "q17",
+    "intent": "chat_quality_analysis",
+    "question": "Chất lượng chăm sóc Lead qua Hội thoại của CVTS",
+    "sql": "WITH quality_stats AS ( SELECT u.id, u.full_name, u.area, COUNT(za.id) as total_conversations, ROUND(AVG(za.quality_score)) as avg_quality_score, ROUND(AVG((za.quality_breakdown->>'messageQuality')::numeric)) as avg_msg_quality, ROUND(AVG((za.quality_breakdown->>'leadEngagement')::numeric)) as avg_engagement, ROUND(AVG((za.quality_breakdown->>'conversionIndicators')::numeric)) as avg_conversion, COUNT(za.id) FILTER (WHERE za.quality_grade IN ('A', 'B')) as high_quality_count, COUNT(za.id) FILTER (WHERE 'NO_LEAD_RESPONSE' = ANY(za.quality_flags)) as no_response_count, -- Hội thoại 2 chiều (lead có phản hồi) COUNT(za.id) FILTER (WHERE NOT ('NO_LEAD_RESPONSE' = ANY(za.quality_flags))) as two_way_conversations, -- Hội thoại 1 chiều (lead không phản hồi) COUNT(za.id) FILTER (WHERE 'NO_LEAD_RESPONSE' = ANY(za.quality_flags)) as one_way_conversations, -- Tỷ lệ hội thoại 2 chiều CASE WHEN COUNT(za.id) > 0 THEN ROUND((COUNT(za.id) FILTER (WHERE NOT ('NO_LEAD_RESPONSE' = ANY(za.quality_flags)))::numeric / COUNT(za.id)::numeric) * 100) ELSE 0 END as two_way_ratio FROM users u LEFT JOIN zalo_conversations zc ON u.id = zc.user_id LEFT JOIN zalo_ai_analysis za ON zc.id = za.zalo_conversation_id WHERE u.role = 'cvts' AND u.status = 'active' GROUP BY u.id, u.full_name, u.area ) SELECT ROW_NUMBER() OVER (ORDER BY avg_quality_score DESC NULLS LAST) as \"Rank\", full_name as \"CVTS\", area as \"Khu vực\", total_conversations as \"Tổng HT\", two_way_conversations as \"HT 2 chiều\", one_way_conversations as \"HT 1 chiều\", two_way_ratio || '%' as \"Tỷ lệ 2 chiều\", avg_quality_score as \"TB Quality\", -- Đánh giá tổng thể CASE WHEN avg_quality_score >= 70 THEN '🏆 Xuất sắc' WHEN avg_quality_score >= 50 THEN '✅ Tốt' WHEN avg_quality_score >= 30 THEN '⚠️ Trung bình' ELSE '🔴 Cần cải thiện' END as \"Đánh giá\" FROM quality_stats ORDER BY avg_quality_score DESC NULLS LAST;",
+    "explanation": "Chất lượng chăm sóc Lead qua Hội thoại của CVTS"
+  },
+  {
+    "id": "q20",
+    "intent": "conversation_volume",
+    "question": "Đang có bao nhiêu hội thoại hoạt động?",
+    "sql": "WITH cvts_stats AS ( SELECT u.full_name as cvts_name, u.area, COUNT(zc.id) as active_conversation_count, MAX(zc.last_message_at) as last_message_at FROM users u LEFT JOIN zalo_conversations zc ON u.id = zc.user_id WHERE u.role = 'cvts' AND u.status = 'active' GROUP BY u.full_name, u.area HAVING COUNT(zc.id) > 0 -- Bỏ các CVTS không có conversation nào ), all_results AS ( SELECT 'TỔNG' as cvts_name, NULL as area, SUM(active_conversation_count) as active_conversation_count, MAX(last_message_at) as last_message_at, 0 as sort_order FROM cvts_stats UNION ALL SELECT cvts_name, area, active_conversation_count, last_message_at, 1 as sort_order FROM cvts_stats ) SELECT cvts_name, area, active_conversation_count, last_message_at FROM all_results ORDER BY sort_order, active_conversation_count DESC;",
+    "explanation": "Đang có bao nhiêu hội thoại hoạt động?"
+  }
+]

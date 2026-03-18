@@ -1,0 +1,85 @@
+{
+  "tables": {
+    "users": {
+      "description": "Người dùng hệ thống CRM — lưu trữ roles (cvts, ctv, deputy_manager, etc.), khu vực, chỉ tiêu, và trạng thái kết nối kênh. CVTS (Cán Bộ Tuyển Sinh) là role chính tiếp xúc và chăm sóc lead.",
+      "columns": {
+        "id": "ID duy nhất",
+        "full_name": "Họ tên",
+        "role": "'superadmin', 'manager_l1', 'manager_l2', 'marketing_manager', 'deputy_manager', 'cvts', 'ctv'",
+        "region": "Khu vực: 'TP.HCM', 'Hà Nội', 'Đà Nẵng', 'Cần Thơ'",
+        "area": "Vùng: 'DNB & HCM', 'TNB & HCM'",
+        "manager_id": "FK → users.id — quản lý trực tiếp",
+        "phone": "Số điện thoại",
+        "channel_connected_id": "ID kết nối Zalo — nếu NULL thì CVTS chưa kết nối Zalo",
+        "status": "'active', 'inactive', 'deleted'",
+        "last_interaction": "Thời gian tương tác cuối",
+        "lead_target": "Chỉ tiêu số lead hàng tháng",
+        "created_at": "Ngày tạo tài khoản"
+      },
+      "business_rules": [
+        "CVTS chưa kết nối Zalo = không có channel Zalo active (LEFT JOIN channels WHERE channel='zalo' IS NULL)"
+      ]
+    },
+    "channels": {
+      "description": "Kênh giao tiếp omnichannel — Zalo, Facebook, Email, Hotline, Webchat. Mỗi kênh thuộc về 1 user. Dùng để kiểm tra CVTS đã kết nối kênh nào.",
+      "columns": {
+        "id": "ID duy nhất",
+        "channel": "Loại kênh: 'zalo', 'facebook', 'email', 'hotline', 'webchat'",
+        "sub_type": "Loại con: 'personal' (Zalo cá nhân), 'oa' (Zalo OA), 'page' (FB Page), 'smtp', 'voip', 'widget'",
+        "name": "Tên hiển thị",
+        "status": "'active', 'inactive', 'error' — dùng để check kênh đang hoạt động",
+        "last_sync": "Lần đồng bộ cuối",
+        "message_count": "Tổng số tin nhắn đã xử lý",
+        "metadata": "JSONB — cấu hình riêng của kênh",
+        "user_id": "FK → users.id — chủ sở hữu kênh",
+        "channel_connected_id": "Session ID/Connection ID từ platform",
+        "created_at": "Ngày tạo",
+        "updated_at": "Ngày cập nhật"
+      },
+      "relationships": [
+        "Many-to-one: nhiều channels → 1 user (user_id)"
+      ]
+    },
+    "activities": {
+      "description": "Nhật ký audit trail — ghi log tất cả hoạt động trong hệ thống: tạo mới, cập nhật, liên hệ, thay đổi stage. Dùng để tracking hiệu suất và compliance.",
+      "columns": {
+        "id": "ID duy nhất",
+        "lead_id": "ID của lead (KHÔNG CÓ FK constraint — cho phép tracking khi lead bị xóa)",
+        "user_id": "FK → users.id — người thực hiện hành động",
+        "action": "Hành động: 'created' (tạo mới), 'updated' (cập nhật), 'contacted' (liên hệ), 'stage_changed' (đổi stage)",
+        "entity_type": "Loại đối tượng: 'lead', 'conversation', 'task'",
+        "entity_id": "ID của đối tượng",
+        "details": "JSONB — chi tiết thay đổi (before/after values)",
+        "created_at": "Thời gian hoạt động — DÙNG ĐỂ FILTER THEO THỜI GIAN"
+      },
+      "business_rules": [
+        "Đếm activities trong 7 ngày gần đây = đo lường productivity",
+        "Filter theo entity_type để phân loại hoạt động"
+      ]
+    },
+    "tasks": {
+      "description": "Nhiệm vụ cho CVTS/CTV — follow-up, callback, meeting, email. Có thể liên quan đến lead, trường học, vùng, hoặc stage. Tracking hoàn thành và quá hạn.",
+      "columns": {
+        "id": "ID duy nhất",
+        "lead_id": "FK → leads.id (optional — task cho lead cụ thể)",
+        "school_id": "FK → schools.id (optional — task cho trường)",
+        "region": "Vùng địa lý (optional — task theo tỉnh/thành)",
+        "lead_stage": "Giai đoạn lead (optional — task cho leads ở stage này)",
+        "assigned_to": "FK → users.id — người được giao (required)",
+        "title": "Tiêu đề nhiệm vụ",
+        "description": "Mô tả chi tiết",
+        "type": "Loại: 'follow-up', 'callback', 'meeting', 'email'",
+        "priority": "Ưu tiên: 'high', 'medium', 'low'",
+        "due_date": "Hạn hoàn thành",
+        "completed": "Boolean — đã hoàn thành chưa",
+        "completed_at": "Thời gian hoàn thành",
+        "created_at": "Ngày tạo"
+      },
+      "business_rules": [
+        "Task quá hạn (overdue) = completed = false AND due_date < NOW()",
+        "Task pending = completed = false AND due_date >= NOW()",
+        "Ít nhất 1 trong 4: lead_id, school_id, region, lead_stage phải có giá trị"
+      ]
+    }
+  }
+}

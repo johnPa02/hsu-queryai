@@ -1,0 +1,22 @@
+{
+  "cuộc gọi đến": {
+    "meaning": "Cuộc gọi từ lead/phụ huynh gọi đến",
+    "db_field": "voip_call_records.direction = 'inbound'"
+  },
+  "cuộc gọi đi": {
+    "meaning": "Cuộc gọi CVTS gọi ra cho lead",
+    "db_field": "voip_call_records.direction = 'outbound'"
+  },
+  "cuộc gọi nhỡ": {
+    "meaning": "Cuộc gọi không được trả lời",
+    "db_field": "voip_call_records.call_status = 'missed'"
+  },
+  "chất lượng cuộc gọi": {
+    "meaning": "Điểm chất lượng từ AI analysis",
+    "db_field": "voip_call_records.analysis->>'quality_score'"
+  },
+  "CVTS": {
+    "meaning": "Cán Bộ Tuyển Sinh",
+    "db_field": "users.role = 'cvts'"
+  }
+}

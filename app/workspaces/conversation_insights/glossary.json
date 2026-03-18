@@ -1,0 +1,22 @@
+{
+  "chủ đề quan tâm": {
+    "meaning": "Các topic được AI trích xuất từ hội thoại",
+    "db_field": "zalo_ai_analysis.topics"
+  },
+  "chất lượng chăm sóc chat": {
+    "meaning": "Điểm chất lượng tư vấn qua Zalo",
+    "db_field": "zalo_ai_analysis.quality_score và quality_grade"
+  },
+  "sentiment": {
+    "meaning": "Cảm xúc của cuộc trò chuyện",
+    "db_field": "zalo_ai_analysis.sentiment ('positive','neutral','negative')"
+  },
+  "xu hướng chủ đề": {
+    "meaning": "Tổng hợp xu hướng topics từ nhiều hội thoại",
+    "db_field": "zalo_ai_analysis_recap.analysis"
+  },
+  "CVTS": {
+    "meaning": "Cán Bộ Tuyển Sinh",
+    "db_field": "users.role = 'cvts'"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "hotline_insights",
+  "name": "Hotline Insights",
+  "description": "Thống kê cuộc gọi VoIP, chủ đề hotline, chất lượng chăm sóc qua điện thoại",
+  "tables": ["voip_call_records", "users", "leads"],
+  "intents": [
+    "call_volume",
+    "call_volume_trend",
+    "call_topics",
+    "call_quality",
+    "care_quality_hotline"
+  ]
+}

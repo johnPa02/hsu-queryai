@@ -1,0 +1,14 @@
+{
+  "id": "conversation_insights",
+  "name": "Conversation Insights",
+  "description": "Nội dung hội thoại Zalo, chủ đề quan tâm khi chat, chất lượng chăm sóc qua tin nhắn",
+  "tables": ["zalo_conversations", "zalo_ai_analysis", "zalo_ai_analysis_recap", "users", "leads"],
+  "intents": [
+    "conversation_topics",
+    "conversation_topic_trend",
+    "conversation_summary",
+    "conversation_quality",
+    "care_quality_chat",
+    "lead_interest_from_chat"
+  ]
+}

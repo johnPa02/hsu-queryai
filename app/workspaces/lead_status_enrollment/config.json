@@ -1,0 +1,16 @@
+{
+  "id": "lead_status_enrollment",
+  "name": "Lead Status & Enrollment",
+  "description": "Trạng thái lead, học bổng, nhập học, ngành quan tâm, conversion funnel, stalled leads",
+  "tables": ["leads", "lead_stage_history", "users"],
+  "intents": [
+    "lead_current_status",
+    "lead_count_by_stage",
+    "lead_stage_conversion",
+    "lead_stagnation",
+    "scholarship_pipeline",
+    "tuition_completion",
+    "major_interest",
+    "enrollment_summary"
+  ]
+}

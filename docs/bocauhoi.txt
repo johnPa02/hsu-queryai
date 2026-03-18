@@ -1,0 +1,29 @@
+Dễ
+1. Trạng thái của các Lead đang ra sao?
+2. Có bao nhiêu lead đã nhập học?
+3. Có bao nhiêu lead đã cọc tiền xét học bổng?
+4. Có bao nhiêu lead đã đăng ký xét học bổng?
+5. Thời gian nộp hồ sơ của các lead xét học bổng là khi nào?
+6. Các chuyên ngành mà lead hay quan tâm nhất?
+7. Các chủ đề mà lead hay quan tâm khi chat?
+8. Thống kê các cuộc gọi trong 3 ngày qua?
+9. Các chủ đề mà lead hay gọi hotline để hỏi?
+10. Nội dung của các cuộc hội thoại trong 1 tuần qua, các bạn quan tâm điều gì?
+11. Tính từ 1/1 đến giờ, cho thống kê nội dung các cuộc hội thoại
+12. Tình hình tuyển sinh 2 ngày qua có gì?
+13. CVTS nào chưa login Zalo?
+14. Hoạt động gần nhất trong 24h của các CVTS
+15. Tình hình nhiệm vụ của các CVTS?
+16. Tình hình chăm sóc của các CVTS đang như thế nào?
+17. Chất lượng chăm sóc Lead qua Hội thoại của CVTS
+18. Chất lượng chăm sóc Lead qua Hotline của các CVTS
+
+Khó
+1. Bảng xếp hạng CVTS theo số lead đã nhập học
+2. Tỷ lệ lead từ "đã ĐKOL" sang "đã trúng tuyển" là bao nhiêu?
+3. Số lead đã trúng tuyển quá 14 ngày mà chưa có diễn biến thêm?
+4. Lead nào có phụ huynh hỗ trợ cao nhưng chưa nhập học?
+5. Số lead có điểm tiềm năng là A hiện tại - dự báo doanh thu
+6. So sánh số lượng lead đã hoàn tất học phí giữa các ngành
+7. Có bao nhiêu lead có trạng thái chăm sóc là không đủ tài chính
+8. Tỷ lệ hoàn tất học phí theo ngành?

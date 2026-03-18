@@ -1,0 +1,13 @@
+{
+  "id": "staff_productivity",
+  "name": "Staff Productivity",
+  "description": "Login/kết nối Zalo, hoạt động CVTS, nhiệm vụ, hiệu suất làm việc",
+  "tables": ["users", "channels", "activities", "tasks"],
+  "intents": [
+    "staff_login_status",
+    "staff_recent_activity",
+    "staff_task_status",
+    "staff_productivity_summary",
+    "staff_care_activity"
+  ]
+}

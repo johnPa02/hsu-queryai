@@ -1,0 +1,13 @@
+{
+  "id": "executive_summary",
+  "name": "Executive Admissions Summary",
+  "description": "Tổng hợp tình hình tuyển sinh đa nguồn, xếp hạng CVTS, dự báo, báo cáo tổng quan",
+  "tables": ["leads", "lead_stage_history", "zalo_conversations", "zalo_ai_analysis", "voip_call_records", "activities", "tasks", "users"],
+  "intents": [
+    "executive_admissions_overview",
+    "staff_ranking",
+    "revenue_forecast",
+    "cross_workspace_care_quality",
+    "admissions_alerts"
+  ]
+}

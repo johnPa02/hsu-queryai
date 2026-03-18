@@ -1,0 +1,197 @@
+[
+  {
+    "id": "lead_001",
+    "intent": "lead_current_status",
+    "question": "Trạng thái của các Lead đang ra sao?",
+    "sql": "SELECT stage, COUNT(*) AS total FROM leads WHERE status = 'active' GROUP BY stage ORDER BY total DESC;",
+    "explanation": "Thống kê số lượng lead theo từng giai đoạn (stage), chỉ lấy lead active"
+    COMMENT: ĐÚNG
+  },
+  {
+    "id": "lead_002",
+    "intent": "lead_count_by_stage",
+    "question": "Có bao nhiêu lead đã nhập học?",
+    "sql": "SELECT COUNT(*) AS total_enrolled FROM leads WHERE is_enrolled = true AND status = 'active';",
+    "explanation": "Đếm số lead có is_enrolled = true và chưa bị xóa"
+    COMMENT: "Đếm số lead có is_enrolled = true và stage = 'enrolled' và chưa bị xóa.
+    SQL đúng: SELECT COUNT(*) AS total_enrolled FROM leads WHERE is_enrolled = true and stage = 'enrolled' AND status = 'active'"
+  },
+  {
+    "id": "lead_003",
+    "intent": "scholarship_pipeline",
+    "question": "Có bao nhiêu lead đã cọc tiền xét học bổng?",
+    "sql": "SELECT COUNT(*) AS total_deposited FROM leads WHERE is_scholarship_deposited = true AND status = 'active';",
+    "explanation": "Đếm lead đã đặt cọc học bổng"
+    COMMENT: "SQL đúng: SELECT COUNT(*) AS total_deposited FROM leads WHERE is_scholarship_deposited = true and stage = 'scholarship_deposited' AND status = 'active'"
+  },
+  {
+    "id": "lead_004",
+    "intent": "scholarship_pipeline",
+    "question": "Có bao nhiêu lead đã đăng ký xét học bổng?",
+    "sql": "SELECT COUNT(*) AS total_applied FROM leads WHERE is_scholarship_applied = true AND status = 'active';",
+    "explanation": "Đếm lead đã nộp hồ sơ xét học bổng"
+    COMMENT: "SQL ĐÚNG: SELECT COUNT(*) AS total_applied FROM leads WHERE is_scholarship_applied = true and stage = 'scholarship_applied' AND status = 'active'"
+  },
+  {
+    "id": "lead_005",
+    "intent": "scholarship_pipeline",
+    "question": "Thời gian nộp hồ sơ của các lead xét học bổng là khi nào?",
+    "sql": "SELECT l.full_name, l.phone, lsh.changed_at AS scholarship_applied_at FROM leads l JOIN lead_stage_history lsh ON l.id = lsh.lead_id WHERE lsh.to_stage = 'scholarship_applied' AND l.status = 'active' ORDER BY lsh.changed_at DESC;",
+    "explanation": "Lấy thời gian nộp hồ sơ từ lead_stage_history khi to_stage = scholarship_applied"
+    COMMENT: ĐÚNG
+  },
+  {
+    "id": "lead_006",
+    "intent": "major_interest",
+    "question": "Các chuyên ngành mà lead hay quan tâm nhất?",
+    "sql": "SELECT interested_majors, COUNT(*) AS total FROM leads WHERE interested_majors IS NOT NULL AND status = 'active' GROUP BY interested_majors ORDER BY total DESC LIMIT 20;",
+    "explanation": "Thống kê ngành quan tâm nhiều nhất"
+    COMMENT: SQL ĐÚNG: "SELECT
+TRIM(program) AS key,
+COUNT(*) AS count
+FROM leads
+CROSS JOIN LATERAL unnest(string_to_array(interested_majors, ',')) AS program
+WHERE interested_majors IS NOT NULL
+AND TRIM(program) <> 'Khác'
+AND status = 'active'
+GROUP BY TRIM(program)
+ORDER BY count DESC
+LIMIT 20;"
+  },
+  {
+    "id": "lead_007",
+    "intent": "lead_current_status",
+    "question": "Có bao nhiêu lead có trạng thái chăm sóc là không đủ tài chính?",
+    "sql": "SELECT COUNT(*) AS total FROM leads WHERE care_status = 'insufficient_funds' AND status = 'active';",
+    "explanation": "Đếm lead có care_status = insufficient_funds"
+    COMMENT: ĐÚNG
+  },
+  {
+    "id": "lead_008",
+    "intent": "lead_current_status",
+    "question": "Lead nào có phụ huynh hỗ trợ cao nhưng chưa nhập học?",
+    "sql": "SELECT full_name, phone, interested_majors, stage, care_status FROM leads WHERE parent_support = 'high' AND is_enrolled = false AND status = 'active' ORDER BY created_at DESC;",
+    "explanation": "Lọc lead có parent_support = high và chưa enrolled"
+    COMMENT: Lọc lead có parent_support = high và chưa enrolled và chưa hoàn tất đóng học phí. SQL đúng là: "SELECT
+full_name,
+phone,
+interested_majors,
+stage,
+care_status
+FROM leads
+WHERE parent_support = 'high'
+AND (is_enrolled = false OR is_tuition_paid = false)
+AND status = 'active'
+ORDER BY created_at DESC;"
+  },
+  {
+    "id": "lead_009",
+    "intent": "enrollment_summary",
+    "question": "Có bao nhiêu lead có điểm tiềm năng là A hiện tại?",
+    "sql": "SELECT COUNT(*) AS total_a_leads FROM leads WHERE smart_score = 'A' AND status = 'active';",
+    "explanation": "Đếm lead có smart_score A"
+    COMMENT: ĐÚNG
+  },
+  {
+    "id": "lead_010",
+    "intent": "lead_stage_conversion",
+    "question": "Tỷ lệ lead từ đã ĐKOL sang đã trúng tuyển là bao nhiêu?",
+    "sql": "SELECT ROUND(COUNT(CASE WHEN is_admitted = true THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN is_online_applied = true THEN 1 END), 0), 2) AS conversion_rate_percent FROM leads WHERE status = 'active';",
+    "explanation": "Tỷ lệ chuyển từ đã đăng ký online sang đã trúng tuyển"
+    COMMENT: SQL ĐÚNG LÀ "SELECT ROUND(COUNT(CASE WHEN is_admitted = true AND stage = 'admitted' THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN is_online_applied = true AND stage = 'online_admission' THEN 1 END), 0), 2) AS conversion_rate_percent FROM leads WHERE status = 'active';"
+  },
+  {
+    "id": "lead_011",
+    "intent": "lead_stagnation",
+    "question": "Số lead đã trúng tuyển quá 14 ngày mà chưa có diễn biến thêm?",
+    "sql": "SELECT l.full_name, l.phone, l.interested_majors, lsh.changed_at AS admitted_at, EXTRACT(DAY FROM NOW() - lsh.changed_at) AS days_stalled FROM leads l JOIN lead_stage_history lsh ON l.id = lsh.lead_id WHERE lsh.to_stage = 'admitted' AND l.stage = 'admitted' AND l.status = 'active' AND lsh.changed_at < NOW() - INTERVAL '14 days' ORDER BY days_stalled DESC;",
+    "explanation": "Lead trúng tuyển quá 14 ngày mà stage vẫn là admitted (không tiến thêm)"
+    COMMENT: ĐÚNG
+  },
+  {
+    "id": "lead_012",
+    "intent": "tuition_completion",
+    "question": "So sánh số lượng lead đã hoàn tất học phí giữa các ngành?",
+    "sql": "SELECT admission_majors AS nganh, COUNT(*) AS total FROM leads WHERE is_tuition_paid = true AND admission_majors IS NOT NULL AND status = 'active' GROUP BY admission_majors ORDER BY total DESC;",
+    "explanation": "Thống kê lead đã đóng học phí theo ngành nhập học"
+    COMMENT: này cần làm rõ ngành gì 
+1. ngành nhập học
+2. ngành quan tâm
+3. ngành đc học bồng
+
+1. 
+
+SELECT
+TRIM(program) AS nganh,
+COUNT(*) AS total
+FROM leads
+CROSS JOIN LATERAL unnest(string_to_array(admission_majors, ',')) AS program
+WHERE
+is_tuition_paid = true
+AND admission_majors IS NOT NULL
+AND stage = 'tuition_paid'
+AND status = 'active'
+GROUP BY TRIM(program)
+ORDER BY total DESC
+
+
+
+2. SELECT
+TRIM(program) AS nganh,
+COUNT(*) AS total
+FROM leads
+CROSS JOIN LATERAL unnest(string_to_array(interested_majors, ',')) AS program
+WHERE
+is_tuition_paid = true
+AND interested_majors IS NOT NULL
+AND stage = 'tuition_paid'
+AND status = 'active'
+GROUP BY TRIM(program)
+ORDER BY total DESC;
+
+3. 
+SELECT
+TRIM(program) AS nganh,
+COUNT(*) AS total
+FROM leads
+CROSS JOIN LATERAL unnest(string_to_array(scholarship_majors, ',')) AS program
+WHERE
+is_tuition_paid = true
+AND scholarship_majors IS NOT NULL
+AND stage = 'tuition_paid'
+AND status = 'active'
+GROUP BY TRIM(program)
+ORDER BY total DESC
+  },
+  {
+    "id": "lead_013",
+    "intent": "tuition_completion",
+    "question": "Tỷ lệ hoàn tất học phí theo ngành?",
+    "sql": "SELECT admission_majors AS nganh, COUNT(CASE WHEN is_tuition_paid = true THEN 1 END) AS paid, COUNT(*) AS total, ROUND(COUNT(CASE WHEN is_tuition_paid = true THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2) AS rate_percent FROM leads WHERE admission_majors IS NOT NULL AND status = 'active' GROUP BY admission_majors ORDER BY rate_percent DESC;",
+    "explanation": "Tỷ lệ đóng học phí / tổng lead theo từng ngành"
+    COMMENT: SQL ĐÚNG LÀ "SELECT
+TRIM(program) AS nganh,
+COUNT(CASE WHEN is_tuition_paid = true THEN 1 END) AS paid,
+COUNT(*) AS total,
+ROUND(
+COUNT(CASE WHEN is_tuition_paid = true THEN 1 END) * 100.0
+/ NULLIF(COUNT(*), 0),
+2
+) AS rate_percent
+FROM leads
+CROSS JOIN LATERAL unnest(string_to_array(admission_majors, ',')) AS program
+WHERE
+admission_majors IS NOT NULL
+AND status = 'active'
+GROUP BY TRIM(program)
+ORDER BY rate_percent DESC;"
+  },
+  {
+    "id": "lead_014",
+    "intent": "lead_count_by_stage",
+    "question": "Bảng xếp hạng CVTS theo số lead đã nhập học",
+    "sql": "SELECT u.full_name AS cvts_name, COUNT(l.id) AS total_enrolled FROM leads l JOIN users u ON l.assigned_to = u.id WHERE l.is_enrolled = true AND l.status = 'active' AND u.role = 'cvts' GROUP BY u.full_name ORDER BY total_enrolled DESC;",
+    "explanation": "Ranking CVTS theo số lead đã enrolled, join leads với users qua assigned_to"
+    COMMENT: ĐÚNG
+  }
+]

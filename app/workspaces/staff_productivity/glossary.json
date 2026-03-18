@@ -1,0 +1,14 @@
+{
+  "CVTS chưa kết nối Zalo": {
+    "meaning": "CVTS không có channel Zalo active",
+    "db_field": "LEFT JOIN channels ON channels.user_id = users.id AND channels.channel = 'zalo' WHERE channels.id IS NULL"
+  },
+  "nhiệm vụ quá hạn": {
+    "meaning": "Task chưa hoàn thành và đã qua due_date",
+    "db_field": "tasks.completed = false AND tasks.due_date < NOW()"
+  },
+  "CVTS": {
+    "meaning": "Cán Bộ Tuyển Sinh",
+    "db_field": "users.role = 'cvts'"
+  }
+}

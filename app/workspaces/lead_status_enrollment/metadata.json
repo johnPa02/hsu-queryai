@@ -1,0 +1,122 @@
+{
+  "tables": {
+    "users": {
+      "description": "Bảng người dùng hệ thống CRM — lưu trữ tất cả roles: superadmin (Hiệu trưởng), manager_l1 (Phó Hiệu Trưởng), manager_l2 (Trưởng Phòng), marketing_manager, deputy_manager (Phó Quản Lý), cvts (Cán Bộ Tuyển Sinh), ctv (Cộng Tác Viên). Phân quyền theo vai trò và vùng địa lý (area).",
+      "columns": {
+        "id": "ID duy nhất của người dùng",
+        "email": "Email đăng nhập (unique)",
+        "full_name": "Họ và tên đầy đủ",
+        "role": "Vai trò: 'superadmin', 'manager_l1', 'manager_l2', 'marketing_manager', 'deputy_manager', 'cvts', 'ctv'",
+        "region": "Khu vực: 'TP.HCM', 'Hà Nội', 'Đà Nẵng', 'Cần Thơ'",
+        "area": "Vùng: 'DNB & HCM', 'TNB & HCM' — dùng để phân quyền data",
+        "responsible_regions": "text[] — Danh sách các tỉnh/thành phố phụ trách",
+        "manager_id": "FK → users.id — ID quản lý trực tiếp (CTV→CVTS, CVTS→Deputy Manager)",
+        "phone": "Số điện thoại",
+        "channel_connected_id": "ID kết nối với kênh bên ngoài (Zalo userId)",
+        "status": "Trạng thái: 'active', 'inactive', 'deleted'",
+        "lead_target": "Chỉ tiêu số lead hàng tháng (cho CVTS)",
+        "conversion_rate_target": "Chỉ tiêu tỷ lệ chuyển đổi (%)",
+        "enrollment_target": "Chỉ tiêu số sinh viên nhập học",
+        "last_interaction": "Thời gian tương tác cuối cùng với hệ thống",
+        "created_at": "Ngày tạo tài khoản",
+        "updated_at": "Ngày cập nhật cuối"
+      },
+      "relationships": [
+        "Self-referencing: manager_id → users.id (quản lý trực tiếp)",
+        "1 user → nhiều leads (qua leads.assigned_to)",
+        "1 user → nhiều tasks (qua tasks.assigned_to)",
+        "1 user → nhiều zalo_conversations (qua zalo_conversations.user_id)",
+        "1 user → nhiều channels (qua channels.user_id)"
+      ]
+    },
+    "leads": {
+      "description": "Bảng học sinh tiềm năng — lưu trữ thông tin chi tiết về học sinh tiềm năng (prospective students) của Đại học Hoa Sen. Gồm 75+ trường: thông tin cá nhân, liên hệ, trường THPT, phụ huynh, ngành quan tâm, 9 boolean flags trạng thái ứng tuyển, và tracking chăm sóc.",
+      "columns": {
+        "id": "ID duy nhất của lead",
+        "full_name": "Họ và tên học sinh (required)",
+        "gender": "'male', 'female', 'other'",
+        "date_of_birth": "Ngày sinh",
+        "phone": "Số điện thoại (required)",
+        "email": "Email",
+        "address": "Địa chỉ",
+        "province_code": "Mã tỉnh/thành phố theo danh mục hành chính",
+        "region": "Vùng miền",
+        "area": "Khu vực: 'DNB & HCM', 'TNB & HCM'",
+        "school_id": "FK → schools.id — trường THPT đang/đã học",
+        "grade_level": "Lớp: '10', '11', '12', 'graduated'",
+        "gpa": "Điểm GPA (text: '8.5')",
+        "graduation_year": "Năm tốt nghiệp THPT",
+        "conduct": "Hạnh kiểm: 'Tốt', 'Khá', 'Trung bình', 'Yếu'",
+        "high_school_code": "Mã trường THPT",
+        "parent_name": "Họ tên phụ huynh",
+        "parent_phone": "Số điện thoại phụ huynh",
+        "parent_support": "Mức độ hỗ trợ của phụ huynh: 'high', 'medium', 'low'",
+        "parent_occupation": "Nghề nghiệp phụ huynh",
+        "family_income": "Thu nhập gia đình: 'low', 'medium', 'high'",
+        "source": "Nguồn lead: 'zalo', 'facebook', 'form', 'direct', 'event', 'referral', 'HSU' (required)",
+        "stage": "Giai đoạn xử lý trong funnel tuyển sinh: 'raw_lead' → 'interested_in_major' → 'scholarship_applied' → 'scholarship_deposited' → 'account_created' → 'online_admission' → 'hardcopy_submitted' → 'admitted' → 'enrolled' → 'tuition_paid' | 'enrollment_cancelled' | 'not_interested'",
+        "smart_score": "Phân loại tiềm năng AI: 'A' (cao nhất), 'B', 'C+', 'C', 'D' (mặc định), 'QL' (quản lý)",
+        "care_status": "Trạng thái chăm sóc hiện tại — 23 giá trị: 'consulted' (Đã tư vấn), 'unreachable' (Không liên lạc được), 'wrong_number' (Sai số), 'callback_scheduled' (Hẹn gọi lại sau), 'scholarship_completed' (Đã xét học bổng), 'registered_admission' (Đăng ký xét tuyển), 'admission_completed' (Đã hoàn tất xét tuyển), 'enrolled_no_payment' (Đã tiếp sinh & chưa nộp học phí), 'enrollment_completed' (Đã hoàn tất nhập học), 'paid_not_enrolled' (Đã cọc & chưa nhập), 'insufficient_funds' (Không đủ tài chính), 'duplicate_lead' (Lead trùng), 'interested_other_products' (Quan tâm sản phẩm khác), 'definitely_choose_hsu' (Chắc chắn chọn HSU), 'not_choose_hsu' (Không chọn HSU), 'study_abroad' (Du học), 'choose_other_school' (Chọn trường khác), 'waiting_exam_score' (Chờ điểm thi), 'waiting_admission_letter' (Chờ giấy báo nhập học), 'thinking_more' (Cân nhắc thêm), 'planning_to_register' (Đang có kế hoạch đăng ký), 'confirmed_registered' (Xác nhận đã đăng ký), 'not_yet_grade_12' (Chưa lên lớp 12)",
+        "assigned_to": "FK → users.id — CVTS phụ trách lead này",
+        "interested_program": "Chương trình đào tạo quan tâm",
+        "interested_majors": "Ngành học quan tâm",
+        "scholarship_majors": "Ngành đăng ký học bổng",
+        "admission_majors": "Ngành nhập học chính thức",
+        "career_goals": "Mục tiêu nghề nghiệp",
+        "scholarship_interest": "Quan tâm học bổng (boolean)",
+        "financial_situation": "Tình hình tài chính: 'good', 'average', 'difficult'",
+        "is_scholarship_applied": "Boolean — Đã nộp hồ sơ xét học bổng",
+        "is_scholarship_deposited": "Boolean — Đã cọc tiền học bổng",
+        "is_account_created": "Boolean — Đã tạo tài khoản xét tuyển",
+        "is_online_applied": "Boolean — Đã đăng ký xét tuyển online (ĐKOL)",
+        "is_hardcopy_submitted": "Boolean — Đã nộp hồ sơ giấy",
+        "is_admitted": "Boolean — Đã trúng tuyển",
+        "is_enrolled": "Boolean — Đã làm thủ tục nhập học",
+        "is_tuition_paid": "Boolean — Đã đóng học phí",
+        "is_enrollment_cancelled": "Boolean — Đã hủy nhập học",
+        "admission_preference": "Nguyện vọng cổng Bộ GD&ĐT",
+        "interaction_count": "Số lần tương tác (integer, mặc định 0)",
+        "last_interaction": "Thời gian tương tác cuối",
+        "next_follow_up_date": "Ngày hẹn follow-up tiếp theo",
+        "notes": "Ghi chú",
+        "tags": "text[] — Thẻ tùy chỉnh: ['cntt', 'hoc_bong', 'diem_cao']",
+        "status": "Trạng thái: 'active', 'inactive', 'deleted'",
+        "created_at": "Ngày tạo lead",
+        "updated_at": "Ngày cập nhật cuối"
+      },
+      "relationships": [
+        "Many-to-one: nhiều leads → 1 user (assigned_to)",
+        "Many-to-one: nhiều leads → 1 school (school_id)",
+        "1 lead → nhiều lead_stage_history",
+        "1 lead → nhiều zalo_conversations (qua lead_id)",
+        "1 lead → nhiều tasks (qua lead_id)",
+        "1 lead → nhiều voip_call_records (soft, qua phone = dst)"
+      ],
+      "business_rules": [
+        "Luôn filter status = 'active' trừ khi hỏi cả deleted",
+        "stage đi theo funnel: raw_lead → interested_in_major → ... → tuition_paid",
+        "9 boolean flags track trạng thái ứng tuyển riêng biệt",
+        "care_status là trạng thái chăm sóc, KHÁC với stage (giai đoạn funnel)"
+      ]
+    },
+    "lead_stage_history": {
+      "description": "Lịch sử thay đổi giai đoạn (stage) của lead — dùng để phân tích conversion funnel, tính thời gian ở mỗi stage, phát hiện bottleneck, và đánh giá hiệu suất CVTS.",
+      "columns": {
+        "id": "ID duy nhất",
+        "lead_id": "FK → leads.id — lead nào thay đổi",
+        "from_stage": "Giai đoạn trước đó (null nếu lần đầu)",
+        "to_stage": "Giai đoạn mới (required)",
+        "changed_by": "FK → users.id — người thực hiện thay đổi",
+        "changed_at": "Thời gian thay đổi — dùng để tính time-in-stage và filter theo thời gian"
+      },
+      "relationships": [
+        "Many-to-one: nhiều stage_history → 1 lead (lead_id)",
+        "Many-to-one: nhiều stage_history → 1 user (changed_by)"
+      ],
+      "business_rules": [
+        "Dùng changed_at để tính thời gian nộp hồ sơ học bổng (to_stage = 'scholarship_applied')",
+        "Dùng để phát hiện stalled leads: lead có stage X nhưng quá N ngày không thay đổi"
+      ]
+    }
+  }
+}

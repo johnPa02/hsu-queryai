@@ -1,0 +1,87 @@
+{
+  "tables": {
+    "users": {
+      "description": "Người dùng hệ thống — hub trung tâm, join với tất cả bảng khác. CVTS (role='cvts') là nhân viên tuyển sinh chính.",
+      "columns": {
+        "id": "ID duy nhất",
+        "full_name": "Họ tên",
+        "role": "'cvts' (Cán Bộ Tuyển Sinh), 'ctv' (Cộng Tác Viên), etc.",
+        "status": "'active', 'inactive', 'deleted'",
+        "phone": "Số điện thoại — match với voip_call_records.extension"
+      }
+    },
+    "leads": {
+      "description": "Học sinh tiềm năng — trung tâm dữ liệu tuyển sinh với 9 boolean flags và care_status.",
+      "columns": {
+        "id": "ID duy nhất",
+        "full_name": "Họ tên",
+        "stage": "Giai đoạn funnel tuyển sinh",
+        "smart_score": "'A', 'B', 'C+', 'C', 'D', 'QL'",
+        "care_status": "23 giá trị trạng thái chăm sóc",
+        "assigned_to": "FK → users.id",
+        "is_enrolled": "Boolean — đã nhập học",
+        "is_tuition_paid": "Boolean — đã đóng học phí",
+        "status": "'active', 'inactive', 'deleted'",
+        "created_at": "Ngày tạo lead"
+      }
+    },
+    "lead_stage_history": {
+      "description": "Lịch sử thay đổi stage — dùng cho conversion funnel analysis.",
+      "columns": {
+        "lead_id": "FK → leads.id",
+        "to_stage": "Giai đoạn mới",
+        "changed_at": "Thời gian thay đổi",
+        "changed_by": "FK → users.id"
+      }
+    },
+    "zalo_conversations": {
+      "description": "Cuộc trò chuyện Zalo 1-1 giữa CVTS và lead.",
+      "columns": {
+        "id": "ID duy nhất",
+        "user_id": "FK → users.id (CVTS owner)",
+        "lead_id": "FK → leads.id (nullable)",
+        "last_message_at": "Thời gian tin nhắn cuối — dùng filter thời gian"
+      }
+    },
+    "zalo_ai_analysis": {
+      "description": "Phân tích AI chat Zalo — sentiment, topics, quality score/grade.",
+      "columns": {
+        "zalo_conversation_id": "FK → zalo_conversations.id (unique)",
+        "sentiment": "'positive', 'neutral', 'negative'",
+        "topics": "text[] — chủ đề trích xuất từ AI",
+        "quality_score": "INTEGER 0-100",
+        "quality_grade": "'A', 'B', 'C', 'D', 'F'"
+      }
+    },
+    "voip_call_records": {
+      "description": "Lịch sử cuộc gọi VoIP — soft match với users và leads.",
+      "columns": {
+        "extension": "Số máy lẻ (soft match users)",
+        "dst": "Số đích (soft match leads.phone)",
+        "duration": "Thời lượng (giây)",
+        "createtime": "Thời gian cuộc gọi — dùng filter thời gian",
+        "direction": "'inbound', 'outbound', 'internal'",
+        "call_status": "'answered', 'missed', 'voicemail'",
+        "analysis": "JSONB — {quality_score, sentiment, topics, keywords}"
+      }
+    },
+    "activities": {
+      "description": "Nhật ký hoạt động — audit trail cho tất cả actions.",
+      "columns": {
+        "user_id": "FK → users.id",
+        "action": "'created', 'updated', 'contacted', 'stage_changed'",
+        "entity_type": "'lead', 'conversation', 'task'",
+        "created_at": "Thời gian hoạt động"
+      }
+    },
+    "tasks": {
+      "description": "Nhiệm vụ CVTS — tracking completed, overdue, pending.",
+      "columns": {
+        "assigned_to": "FK → users.id",
+        "due_date": "Hạn hoàn thành",
+        "completed": "Boolean",
+        "completed_at": "Thời gian hoàn thành"
+      }
+    }
+  }
+}

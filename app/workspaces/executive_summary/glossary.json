@@ -1,0 +1,10 @@
+{
+  "tình hình tuyển sinh": {
+    "meaning": "Tổng hợp multi-domain: lead mới, stage changes, conversations, calls, tasks",
+    "db_field": "Cần query nhiều bảng"
+  },
+  "CVTS": {
+    "meaning": "Cán Bộ Tuyển Sinh",
+    "db_field": "users.role = 'cvts'"
+  }
+}
